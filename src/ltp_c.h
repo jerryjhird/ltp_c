@@ -66,14 +66,12 @@ typedef struct {
     size_t body_len;        
 } ltp_request;
 
-// ltplib stuff
-
 typedef enum {
-    LIBLTP_OK = 0,
-    LIBLTP_ERR_INVALID_ARG,
-    LIBLTP_ERR_BUFFER_TOO_SMALL,
-    LIBLTP_ERR_INVALID_MAGIC,
-    LIBLTP_ERR_MALFORMED
+    LTP_C_OK = 0,
+    LTP_C_ERR_INVALID_ARG,
+    LTP_C_ERR_BUFFER_TOO_SMALL,
+    LTP_C_ERR_INVALID_MAGIC,
+    LTP_C_ERR_MALFORMED
 } ltp_error;
 
 // helpers
@@ -97,30 +95,30 @@ static inline int ltp_path_is(const ltp_request *req, const char *path) {
 
 // implementation
 
-#ifdef LIBLTP_IMPLEMENTATION
+#ifdef LTP_C_IMPLEMENTATION
 
 // requests
 
 ltp_error ltp_encode_request(const ltp_request *req, uint8_t *dest_buf, size_t max_len, size_t *out_len) {
     if (!req || !dest_buf || !out_len) {
-        return LIBLTP_ERR_INVALID_ARG;
+        return LTP_C_ERR_INVALID_ARG;
     }
 
     // get header size
     int header_len = snprintf(NULL, 0, "%.4s %.*s %.*s\n\n", req->magic, (int)req->method_len, req->method, (int)req->path_len, req->path);
 
     if (header_len < 0) {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     size_t total_len = (size_t)header_len + req->body_len;
     if (total_len > max_len) {
-        return LIBLTP_ERR_BUFFER_TOO_SMALL;
+        return LTP_C_ERR_BUFFER_TOO_SMALL;
     }
 
     int written = snprintf((char *)dest_buf, max_len, "%.4s %.*s %.*s\n\n", req->magic, (int)req->method_len, req->method, (int)req->path_len, req->path);
     if (written < 0 || written != header_len) {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     size_t cursor = (size_t)header_len;
@@ -132,25 +130,25 @@ ltp_error ltp_encode_request(const ltp_request *req, uint8_t *dest_buf, size_t m
     }
 
     *out_len = cursor;
-    return LIBLTP_OK;
+    return LTP_C_OK;
 }
 
 ltp_error ltp_decode_request(const uint8_t *src_buf, size_t len, ltp_request *req) {
     // minimum possible request size
     if (!src_buf || !req || len < 10) {
-        return LIBLTP_ERR_INVALID_ARG;
+        return LTP_C_ERR_INVALID_ARG;
     }
 
     // request magic check
     if (memcmp(src_buf, LTP_REQUEST_MAGIC, 4) != 0) {
-        return LIBLTP_ERR_INVALID_MAGIC;
+        return LTP_C_ERR_INVALID_MAGIC;
     }
 
     memcpy(req->magic, src_buf, 4);
 
     // make sure format structure spacing is correct
     if (src_buf[4] != ' ') {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     // find first space after method or space before path
@@ -164,12 +162,12 @@ ltp_error ltp_decode_request(const uint8_t *src_buf, size_t len, ltp_request *re
     }
 
     if (!method_end) {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     size_t method_len = (size_t)(method_end - method_start);
     if (method_len == 0) {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     req->method = (const char *)method_start;
@@ -185,7 +183,7 @@ ltp_error ltp_decode_request(const uint8_t *src_buf, size_t len, ltp_request *re
     }
 
     if (!separator) {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     // path is everything between method_end + 1 and separator
@@ -193,7 +191,7 @@ ltp_error ltp_decode_request(const uint8_t *src_buf, size_t len, ltp_request *re
     size_t path_len = (size_t)(separator - path_start);
 
     if (path_len == 0) {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     req->path = (const char *)path_start;
@@ -211,31 +209,31 @@ ltp_error ltp_decode_request(const uint8_t *src_buf, size_t len, ltp_request *re
         req->body_len = 0;
     }
 
-    return LIBLTP_OK;
+    return LTP_C_OK;
 }
 
 // responses
 
 ltp_error ltp_encode_response(const ltp_response *resp, uint8_t *dest_buf, size_t max_len, size_t *out_len) {
     if (!resp || !dest_buf || !out_len) {
-        return LIBLTP_ERR_INVALID_ARG;
+        return LTP_C_ERR_INVALID_ARG;
     }
 
     // get header size
     int header_len = snprintf(NULL, 0, "%.4s %u\n\n", resp->magic, resp->status_code);
 
     if (header_len < 0) {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     size_t total_len = (size_t)header_len + resp->body_len;
     if (total_len > max_len) {
-        return LIBLTP_ERR_BUFFER_TOO_SMALL;
+        return LTP_C_ERR_BUFFER_TOO_SMALL;
     }
 
     int written = snprintf((char *)dest_buf, max_len, "%.4s %u\n\n", resp->magic, resp->status_code);
     if (written < 0 || written != header_len) {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     size_t cursor = (size_t)header_len;
@@ -247,25 +245,25 @@ ltp_error ltp_encode_response(const ltp_response *resp, uint8_t *dest_buf, size_
     }
 
     *out_len = cursor;
-    return LIBLTP_OK;
+    return LTP_C_OK;
 }
 
 ltp_error ltp_decode_response(const uint8_t *src_buf, size_t len, ltp_response *resp) {
     // minimum possible request size
     if (!src_buf || !resp || len < 8) {
-        return LIBLTP_ERR_INVALID_ARG;
+        return LTP_C_ERR_INVALID_ARG;
     }
 
     // response magic check
     if (memcmp(src_buf, LTP_RESPONSE_MAGIC, 4) != 0) {
-        return LIBLTP_ERR_INVALID_MAGIC;
+        return LTP_C_ERR_INVALID_MAGIC;
     }
 
     memcpy(resp->magic, src_buf, 4);
 
     // make sure format structure spacing is correct
     if (src_buf[4] != ' ') {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     // parse status code
@@ -282,7 +280,7 @@ ltp_error ltp_decode_response(const uint8_t *src_buf, size_t len, ltp_response *
     }
 
     if (!separator) {
-        return LIBLTP_ERR_MALFORMED;
+        return LTP_C_ERR_MALFORMED;
     }
 
     // body starts 2 bytes after separator (\n\n)
@@ -297,7 +295,7 @@ ltp_error ltp_decode_response(const uint8_t *src_buf, size_t len, ltp_response *
         resp->body_len = 0;
     }
 
-    return LIBLTP_OK;
+    return LTP_C_OK;
 }
 
-#endif // LIBLTP_IMPLEMENTATION
+#endif // LTP_C_IMPLEMENTATION
