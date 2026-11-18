@@ -1,13 +1,13 @@
-# Lean Transfer Protocol Library
+# Lean Transfer Protocol Packet Library
 ### single header library for interacting with LTP packets
 
 LTP or Lean Transfer Protocol is a protocol made by me (jerryjhird) as a modular alternative to http
 
 ## Example:
 ```c
-#define LIBLTP_IMPLEMENTATION
-#include "libltp.h"
+#define LTP_C_IMPLEMENTATION
+#include "ltp_c.h"
 ...
 
 ```
-(only use `#define LIBLTP_IMPLEMENTATION` in one .c file)
+(only use `#define LTP_C_IMPLEMENTATION` in one .c file)

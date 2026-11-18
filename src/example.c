@@ -1,5 +1,5 @@
-#define LIBLTP_IMPLEMENTATION
-#include "libltp.h"
+#define LTP_C_IMPLEMENTATION
+#include "ltp_c.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,7 +58,7 @@ int main(void) {
             ltp_response resp = {0};
             size_t tx_len = 0;
 
-            if (ltp_decode_request(rx_buf, (size_t)bytes_read, &req) == LIBLTP_OK) {
+            if (ltp_decode_request(rx_buf, (size_t)bytes_read, &req) == LTP_C_OK) {
                 printf("[Server] recv %.*s request for path: %.*s\n", (int)req.method_len, req.method, (int)req.path_len, req.path);
 
                 // standard ping (always returns 200 "PONG")
@@ -111,7 +111,7 @@ int main(void) {
             size_t tx_cap = resp.body_len + 128;
             uint8_t *tx_buf = malloc(tx_cap);
             if (tx_buf) {
-                if (ltp_encode_response(&resp, tx_buf, tx_cap, &tx_len) == LIBLTP_OK) {
+                if (ltp_encode_response(&resp, tx_buf, tx_cap, &tx_len) == LTP_C_OK) {
                     write(client_fd, tx_buf, tx_len);
                 }
                 free(tx_buf);
